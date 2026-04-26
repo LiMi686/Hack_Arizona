@@ -1,7 +1,11 @@
+import os
 import pandas as pd
 from pymongo import MongoClient
+from dotenv import load_dotenv
 
-MONGO_URI = "mongodb+srv://limi_db_user:5202568742ml@cluster0.rz4get2.mongodb.net/"
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME   = "hack_arizona"
 
 client = MongoClient(MONGO_URI)
