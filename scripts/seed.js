@@ -8,7 +8,6 @@ const User = require("../models/User");
 const Coursework = require("../models/Coursework");
 
 async function seed() {
-  const now = new Date();
   const passwordHash = await bcrypt.hash("password123", 10);
 
   const coursework = {
@@ -46,7 +45,7 @@ async function seed() {
           {
             slug: "food-bank-tour",
             title: "Food Bank Tour",
-            description: "Vocabulary you’ll see on site.",
+            description: "Vocabulary you'll see on site.",
             xp: 20,
             order: 3,
             isPublished: true,
@@ -57,80 +56,47 @@ async function seed() {
     ],
   };
 
-  const users = [
-    {
-      username: "demo",
-      email: "demo@hackarizona.local",
-      passwordHash,
-      streakCount: 7,
-      lastStreakDate: now,
-      xp: 420,
-      level: 3,
-      progress: {
-        unit: 1,
-        quests: {
-          basics1: { status: "done", stars: 3 },
-          basics2: { status: "done", stars: 3 },
-          foodBankTour: { status: "current", stars: 0 },
-        },
-      },
-    },
-    {
-      username: "tanmay",
-      email: "tanmay@hackarizona.local",
-      passwordHash,
-      streakCount: 2,
-      lastStreakDate: now,
-      xp: 120,
-      level: 1,
-      progress: {
-        unit: 1,
-        quests: {
-          basics1: { status: "current", stars: 1 },
-        },
-      },
-    },
-    {
-      username: "alex",
-      email: "alex@hackarizona.local",
-      passwordHash,
-      streakCount: 0,
-      xp: 0,
-      level: 1,
-      progress: {},
-    },
+  // ── Coordinators ──────────────────────────────────────────
+  const coordinators = [
+    { username: "LIMI",     email: "limi@arizona.edu",        role: "coordinator" },
+    { username: "Tanmay",   email: "tanmay@arizona.edu",      role: "coordinator" },
+    { username: "Nilotpal", email: "nilotpal18@arizona.edu",  role: "coordinator" },
   ];
 
-  // replace these emails if they already exist
-  const emails = users.map((u) => u.email);
-  const del = await User.deleteMany({ email: { $in: emails } });
-  const ins = await User.insertMany(users);
+  // ── Participants (from participants collection) ────────────
+  const participantUsers = [
+    { username: "Maria Chen",    email: "maria.chen@email.com" },
+    { username: "James Nguyen",  email: "james.nguyen@email.com" },
+    { username: "Amara Osei",    email: "amara.osei@email.com" },
+    { username: "Sofia Reyes",   email: "sofia.reyes@email.com" },
+    { username: "Derek Johnson", email: "derek.johnson@email.com" },
+    { username: "Linda Yazzie",  email: "linda.yazzie@email.com" },
+    { username: "Carlos Mendez", email: "carlos.mendez@email.com" },
+    { username: "Tanya Williams",email: "tanya.williams@email.com" },
+    { username: "Marcus Hill",   email: "marcus.hill@email.com" },
+    { username: "Rosa Flores",   email: "rosa.flores@email.com" },
+  ].map(u => ({ ...u, role: "user" }));
 
-  // Upsert coursework and enroll demo user
-  const cw = await Coursework.findOneAndUpdate(
+  const allUsers = [
+    ...coordinators.map(u => ({ ...u, passwordHash, streakCount: 0, xp: 0, level: 1, progress: {} })),
+    ...participantUsers.map(u => ({ ...u, passwordHash, streakCount: 0, xp: 0, level: 1, progress: {} })),
+  ];
+
+  const emails = allUsers.map(u => u.email);
+  const del = await User.deleteMany({ email: { $in: emails } });
+  const ins = await User.insertMany(allUsers);
+
+  // Upsert coursework
+  await Coursework.findOneAndUpdate(
     { slug: coursework.slug },
     coursework,
     { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
 
-  const demo = await User.findOne({ email: "demo@hackarizona.local" });
-  if (demo) {
-    demo.enrolledCourseworks = [cw._id];
-    demo.courseworkProgress = [
-      {
-        coursework: cw._id,
-        activeUnitSlug: "unit-1",
-        activeLessonSlug: "food-bank-tour",
-        completedLessonSlugs: ["basics-1", "basics-2"],
-        xpEarned: 45,
-        lastActivityAt: now,
-      },
-    ];
-    await demo.save();
-  }
-
-  console.log(`Deleted ${del.deletedCount} existing dummy users`);
-  console.log(`Inserted ${ins.length} users`);
+  console.log(`Deleted ${del.deletedCount} existing users`);
+  console.log(`Inserted ${ins.length} users:`);
+  console.log(`  - ${coordinators.length} coordinators (LIMI, Tanmay, Nilotpal)`);
+  console.log(`  - ${participantUsers.length} participants`);
 }
 
 seed()
@@ -140,4 +106,3 @@ seed()
     mongoose.connection.close();
     process.exitCode = 1;
   });
-

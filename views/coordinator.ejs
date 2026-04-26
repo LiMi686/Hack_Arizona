@@ -210,7 +210,9 @@ const flagged = participants.filter(p => p.watchStatus === "flagged");
               <div class="actionBtns">
                 <% if (p.watchStatus !== "resolved") { %>
                   <button class="iconBtn iconBtn--danger" type="button">🚩 Flag</button>
-                  <button class="iconBtn" type="button">📞 Outreach</button>
+                  <button class="iconBtn js-outreach" type="button"
+                    data-name="<%= p.name %>"
+                    data-phone="<%= p.phone || 'No phone on file' %>">📞 Outreach</button>
                 <% } else { %>
                   <span class="badge badge--resolved">✓ On track</span>
                 <% } %>
@@ -261,7 +263,9 @@ const flagged = participants.filter(p => p.watchStatus === "flagged");
             </div>
           </div>
           <div class="interventionCard__actions">
-            <button class="btn btn--primary" type="button" style="font-size:13px;padding:8px 12px">📞 Log outreach</button>
+            <button class="btn btn--primary js-outreach" type="button" style="font-size:13px;padding:8px 12px"
+              data-name="<%= p.name %>"
+              data-phone="<%= p.phone || 'No phone on file' %>">📞 Log outreach</button>
             <button class="btn" type="button" style="font-size:13px;padding:8px 12px">✅ Mark resolved</button>
           </div>
         </div>
@@ -334,3 +338,36 @@ const flagged = participants.filter(p => p.watchStatus === "flagged");
   </section>
 
 </section>
+
+<!-- Outreach modal -->
+<div id="outreachModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px 28px;min-width:300px;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <h3 style="margin:0 0 8px;font-size:18px" id="outreachName"></h3>
+    <p style="margin:0 0 20px;color:#666;font-size:13px">Call or log outreach below</p>
+    <div style="display:flex;align-items:center;gap:12px;background:#f5f5f5;border-radius:10px;padding:14px 16px;margin-bottom:20px">
+      <span style="font-size:22px">📞</span>
+      <span id="outreachPhone" style="font-size:20px;font-weight:800;letter-spacing:.5px"></span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <a id="outreachCallBtn" href="#" style="flex:1;text-align:center;background:#6b2a5a;color:#fff;padding:10px;border-radius:10px;text-decoration:none;font-weight:700">📲 Call now</a>
+      <button onclick="document.getElementById('outreachModal').style.display='none'" style="flex:1;border:2px solid #ddd;background:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.js-outreach').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const name = btn.dataset.name;
+    const phone = btn.dataset.phone;
+    document.getElementById('outreachName').textContent = name;
+    document.getElementById('outreachPhone').textContent = phone;
+    document.getElementById('outreachCallBtn').href = phone !== 'No phone on file' ? 'tel:' + phone.replace(/\D/g,'') : '#';
+    const modal = document.getElementById('outreachModal');
+    modal.style.display = 'flex';
+  });
+});
+document.getElementById('outreachModal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>

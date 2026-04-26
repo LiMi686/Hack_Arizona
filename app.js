@@ -272,7 +272,7 @@ app.get("/streaks", requireAuth, (req, res) => {
 });
 
 // Quiz builder
-app.get("/coordinator/quiz/new", requireAuth, (req, res) => {
+app.get("/coordinator/quiz/new", requireAuth, requireRole("coordinator"), (req, res) => {
   res.render("quiz-builder", {
     title: "Quiz Builder",
     styles: ["/home.css", "/quiz-builder.css"],
@@ -281,7 +281,7 @@ app.get("/coordinator/quiz/new", requireAuth, (req, res) => {
   });
 });
 
-app.post("/coordinator/quiz", requireAuth, async (req, res, next) => {
+app.post("/coordinator/quiz", requireAuth, requireRole("coordinator"), async (req, res, next) => {
   try {
     const { title, description, unit, xp, questions, published } = req.body;
     let parsed = [];
@@ -304,7 +304,7 @@ app.post("/coordinator/quiz", requireAuth, async (req, res, next) => {
 });
 
 // Coordinator dashboard (Dashboard 2)
-app.get("/coordinator", requireAuth, async (req, res, next) => {
+app.get("/coordinator", requireAuth, requireRole("coordinator"), async (req, res, next) => {
   try {
     const db = mongoose.connection.db;
 
