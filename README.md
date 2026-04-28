@@ -1,5 +1,7 @@
 # Caridad Culinary Training — Dropout Risk & Support Platform
 
+🏆 **Hack Arizona 2025 — Champion Project**
+
 **Southern Arizona Social Innovation Track · Challenge 1**
 *Improving Workforce Training Completion for Individuals Facing Barriers to Employment*
 

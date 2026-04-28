@@ -76,16 +76,38 @@ for (const n of nodes) {
   else { n.state = "locked"; }
 }
 
-// Positions for serpentine path (19 nodes max, left-center-right zigzag)
+// Quest path: nodes alternate left/right, connected by smooth bezier curves
+const SVG_W = 420;
+const SVG_LEFT = 110;
+const SVG_RIGHT = 310;
+
 function nodePos(idx, total) {
-  const step = 900 / (total - 1 || 1);
-  const y = 50 + idx * step;
-  const col = idx % 4;
-  const xs = [210, 310, 210, 110];
-  return { x: xs[col], y: Math.round(y) };
+  const containerH = 120 + total * 90;
+  const yStep = (containerH - 80) / (total - 1 || 1);
+  const svgY = 40 + idx * yStep;
+  const svgX = idx % 2 === 0 ? SVG_RIGHT : SVG_LEFT;
+  return {
+    svgX,
+    svgY: Math.round(svgY),
+    cssX: ((svgX / SVG_W) * 100).toFixed(2) + '%',
+    cssY: ((svgY / containerH) * 100).toFixed(2) + '%',
+  };
 }
 
 const positions = nodes.map((_, i) => nodePos(i, nodes.length));
+
+// Build smooth S-curve path through all nodes
+function buildSvgPath(pts) {
+  if (!pts.length) return '';
+  let d = `M ${pts[0].svgX} ${pts[0].svgY}`;
+  for (let i = 1; i < pts.length; i++) {
+    const p = pts[i - 1], c = pts[i];
+    const midY = (p.svgY + c.svgY) / 2;
+    d += ` C ${p.svgX} ${midY}, ${c.svgX} ${midY}, ${c.svgX} ${c.svgY}`;
+  }
+  return d;
+}
+const svgPath = buildSvgPath(positions);
 
 function nodeIcon(n) {
   if (n.kind === "quiz") {
@@ -137,29 +159,15 @@ const ahead     = typeof aheadPct !== "undefined" ? aheadPct : 0;
 
         <!-- SVG connecting path -->
         <svg class="duoMap__path" viewBox="0 0 420 <%= 120 + nodes.length * 90 %>" aria-hidden="true">
-          <polyline
-            points="<%= positions.map(p => `${p.x},${p.y}`).join(' ') %>"
-            fill="none"
-            stroke="rgba(214,162,31,0.55)"
-            stroke-width="16"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <polyline
-            points="<%= positions.map(p => `${p.x},${p.y}`).join(' ') %>"
-            fill="none"
-            stroke="rgba(255,255,255,0.7)"
-            stroke-width="7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+          <path d="<%= svgPath %>" fill="none" stroke="rgba(214,162,31,0.5)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="<%= svgPath %>" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
 
         <ol class="duoNodes" aria-label="Lessons and quizzes">
           <% nodes.forEach((n, i) => { %>
           <li
             class="duoNode duoNode--<%= n.state %> <%= n.kind === 'quiz' ? 'duoNode--quiz' : '' %>"
-            style="--x:<%= positions[i].x %>px;--y:<%= positions[i].y %>px"
+            style="--x:<%= positions[i].cssX %>;--y:<%= positions[i].cssY %>"
             data-title="<%= n.title %>"
             data-desc="<%= n.desc %>"
             data-xp="<%= n.xp %>"
